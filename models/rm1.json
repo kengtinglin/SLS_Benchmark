@@ -1,0 +1,8 @@
+{
+    "data_type": "float32",
+    "arch_embedding_size": "4000000-4000000-4000000-4000000-4000000-4000000-4000000-4000000",
+    "arch_sparse_feature_size": 32,
+    "num_indices_per_lookup_fixed": true,
+    "num_indices_per_lookup": 80,
+    "model_name": "rm1"
+}
