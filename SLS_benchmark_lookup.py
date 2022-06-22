@@ -36,7 +36,7 @@ def sls_lookup(object):
                 read_beg = time.process_time()
                 for j in range(arg.mini_batch_size):
                     for k in range(arg.num_indices_per_lookup):
-                        f.seek(offset * indices[j * arg.arch_sparse_feature_size+k])
+                        f.seek(offset * indices[j*arg.num_indices_per_lookup+k])
                         f.read(offset * arg.arch_sparse_feature_size)
                 read_finish = time.process_time()
             elif arg.lookup_mode == 'seq': 
