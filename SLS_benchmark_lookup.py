@@ -27,30 +27,35 @@ def sls_lookup(object):
     total_read_time = 0
     for i in range(num_tables):
         file_name = dir_path + '/' + 'EmbTable'+ str(i)
+        np.random.seed(i)
         indices = np.random.randint(
             0, ln_emb[i], np.sum(lengths)).astype(np.int64)
         print(f'### Read EmbTable{i} ###')
         with open(file_name, 'rb') as f:
             f.seek(0)
             if arg.lookup_mode == 'random':
+                print("Random Lookup...")
                 read_beg = time.process_time()
                 for j in range(arg.mini_batch_size):
                     for k in range(arg.num_indices_per_lookup):
-                        f.seek(offset * indices[j*arg.num_indices_per_lookup+k])
+                        f.seek(offset * indices[j * arg.num_indices_per_lookup+k] * arg.arch_sparse_feature_size)
                         f.read(offset * arg.arch_sparse_feature_size)
                 read_finish = time.process_time()
             elif arg.lookup_mode == 'seq': 
+                print("Sequential Lookup...")
                 read_beg = time.process_time()
                 for j in range(arg.mini_batch_size):
+                    f.seek(0,0)
                     for k in range(arg.num_indices_per_lookup):
-                        f.seek(0,1)
-                        f.read(offset* arg.arch_sparse_feature_size)
+                        f.read(offset * arg.arch_sparse_feature_size)
                 read_finish = time.process_time()
         print(f'read spends {read_finish-read_beg}s')
         total_read_time += (read_finish-read_beg)
         print(f'### Finish Reading EmbTable{i} ###')
         print('\n')
+        
     print(f'Read {num_tables} Embedding Tables Spends {total_read_time}s.')
+    print(f"Finish {arg.model_name} with batch size {arg.mini_batch_size}. Lookup mode is {arg.lookup_mode}.")
     
 if __name__ == "__main__":
     args = cli()
