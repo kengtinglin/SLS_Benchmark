@@ -27,45 +27,53 @@ def sls(object):
         rf = '>f8'
 
     total_calculation_time = 0
+    table_read_time = 0
     for i in range(num_tables):
+        np.random.seed(i)
+
         file_name = dir_path + '/' + 'EmbTable'+ str(i)
         indices = np.random.randint(
             0, ln_emb[i], np.sum(lengths)).astype(np.int64)
-        
-        print(f'### Read EmbTable{i} ###')
+        data = []
+        # print(f'### Read EmbTable{i} ###')
         with open(file_name, 'rb') as f:
             output = np.zeros((arg.mini_batch_size, arg.arch_sparse_feature_size),dtype=np.float32)
             if arg.lookup_mode == 'random':
-                read_beg = time.process_time()
                 for j in range(arg.mini_batch_size):
                     for k in range(arg.num_indices_per_lookup):
-                        f.seek(offset * indices[j*arg.num_indices_per_lookup+k])
-                        output[j] += np.fromfile(f, rf, count=arg.arch_sparse_feature_size) 
-                read_finish = time.process_time()
-                total_calculation_time += (read_finish-read_beg)
+                        tmp = offset * indices[j*arg.num_indices_per_lookup+k]*arg.arch_sparse_feature_size
+                        read_beg = time.process_time()
+                        f.seek(tmp)
+                        output[j] += np.fromfile(f, rf, count=arg.arch_sparse_feature_size)
+                        read_finish = time.process_time()
+                        total_calculation_time += (read_finish-read_beg)
             elif arg.lookup_mode == 'special': 
                 for j in range(arg.mini_batch_size):
-                    indices[j*arg.num_indices_per_lookup:(j+1)*arg.num_indices_per_lookup] = np.sort(indices[j*arg.num_indices_per_lookup:(j+1)*arg.num_indices_per_lookup])    
-                    read_beg = time.process_time()
+                    indices[j*arg.num_indices_per_lookup:(j+1)*arg.num_indices_per_lookup] = np.sort(indices[j*arg.num_indices_per_lookup:(j+1)*arg.num_indices_per_lookup])
+                    f.seek(0)
                     for k in range(arg.num_indices_per_lookup):
-                        f.seek(offset * indices[j*arg.num_indices_per_lookup+k])
+                        tmp = offset * indices[j*arg.num_indices_per_lookup+k]*arg.arch_sparse_feature_size - f.tell()
+                        read_beg = time.process_time()
+                        f.seek(tmp, 1)
                         output[j] += np.fromfile(f, rf, count=arg.arch_sparse_feature_size)
-                    read_finish = time.process_time()
-                    total_calculation_time += (read_finish-read_beg)
+                        read_finish = time.process_time()
+                        total_calculation_time += (read_finish-read_beg)
             elif arg.lookup_mode == 'all':
                 read_beg = time.process_time()
                 data = np.fromfile(f, rf).reshape((ln_emb[i], arg.arch_sparse_feature_size))
                 read_finish = time.process_time()
-                print(f'Read whole table spends {read_finish-read_beg}s')        
+                table_read_time += (read_finish-read_beg)     
                 read_beg = time.process_time()
                 for j in range(arg.mini_batch_size):
                     for k in range(arg.num_indices_per_lookup):
                         output[j] += data[indices[j*arg.num_indices_per_lookup+k]]
                 read_finish = time.process_time()
                 total_calculation_time += (read_finish-read_beg)
-        print(f'It spends {read_finish-read_beg}s')
-        print(f'### Finish Reading EmbTable{i} ###')
-        print('\n')
+        # print(f'It spends {read_finish-read_beg}s')
+        # print(f'### Finish Reading EmbTable{i} ###')
+        # print('\n')
+    if arg.lookup_mode == 'all':
+        print(f'Read {num_tables} Table Spends {table_read_time}s.')
     print(f'Calculate {num_tables} Embedding Tables Spends {total_calculation_time}s.')
     
 if __name__ == "__main__":
