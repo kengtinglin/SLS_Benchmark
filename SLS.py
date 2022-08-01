@@ -42,10 +42,10 @@ def sls(object):
                 for j in range(arg.mini_batch_size):
                     for k in range(arg.num_indices_per_lookup):
                         tmp = offset * indices[j*arg.num_indices_per_lookup+k]*arg.arch_sparse_feature_size
-                        read_beg = time.process_time()
+                        read_beg = time.time()
                         f.seek(tmp)
                         output[j] += np.fromfile(f, rf, count=arg.arch_sparse_feature_size)
-                        read_finish = time.process_time()
+                        read_finish = time.time()
                         total_calculation_time += (read_finish-read_beg)
             elif arg.lookup_mode == 'special': 
                 for j in range(arg.mini_batch_size):
@@ -53,21 +53,21 @@ def sls(object):
                     f.seek(0)
                     for k in range(arg.num_indices_per_lookup):
                         tmp = offset * indices[j*arg.num_indices_per_lookup+k]*arg.arch_sparse_feature_size - f.tell()
-                        read_beg = time.process_time()
+                        read_beg = time.time()
                         f.seek(tmp, 1)
                         output[j] += np.fromfile(f, rf, count=arg.arch_sparse_feature_size)
-                        read_finish = time.process_time()
+                        read_finish = time.time()
                         total_calculation_time += (read_finish-read_beg)
             elif arg.lookup_mode == 'all':
-                read_beg = time.process_time()
+                read_beg = time.time()
                 data = np.fromfile(f, rf).reshape((ln_emb[i], arg.arch_sparse_feature_size))
-                read_finish = time.process_time()
+                read_finish = time.time()
                 table_read_time += (read_finish-read_beg)     
-                read_beg = time.process_time()
+                read_beg = time.time()
                 for j in range(arg.mini_batch_size):
                     for k in range(arg.num_indices_per_lookup):
                         output[j] += data[indices[j*arg.num_indices_per_lookup+k]]
-                read_finish = time.process_time()
+                read_finish = time.time()
                 total_calculation_time += (read_finish-read_beg)
         # print(f'It spends {read_finish-read_beg}s')
         # print(f'### Finish Reading EmbTable{i} ###')
