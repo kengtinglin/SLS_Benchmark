@@ -36,7 +36,7 @@ def cli():
     # Behavior related arg
     parser.add_argument(
         "--lookup-mode", type=str,default="random",
-        help="Random read or sequential read.")
+        help="Random read from storage or from DRAM.")
 
     # config
     parser.add_argument(
